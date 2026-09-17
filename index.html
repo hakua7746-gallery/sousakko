@@ -725,7 +725,11 @@ const views = {
     const perm = v.perm || 'checking';
     const permHtml = !isNative
       ? `<p>このページは閉じていると通知を出せないから、全員の誕生日をカレンダー用のファイルにまとめて書き出せるよ。スマホのカレンダーに読み込むと、下で選んだタイミングと時間に毎年通知が届く。いつもの予定と混ざらないように、先にカレンダーアプリで「創作っ子暦」みたいな新しいカレンダーを作って、そこに追加するのがおすすめ。キャラを増やしたら書き出し直してね。</p>
-        <button class="btn primary block" data-act="ics">カレンダー用ファイルを書き出す</button>`
+        ${isIOS
+          ? `<button class="btn primary block" data-act="ics-open">カレンダーで開く</button>
+             <p style="margin:10px 0 0">うまく開かないときは、下のボタンでファイルを書き出して、メールで自分宛てに送ってね。メールアプリで添付ファイルをタップすると、カレンダーに追加できるよ。</p>
+             <button class="btn ghost block" data-act="ics" style="margin-top:8px">ファイルとして書き出す</button>`
+          : `<button class="btn primary block" data-act="ics">カレンダー用ファイルを書き出す</button>`}`
       : perm === 'granted'
         ? '<p>通知はオンになってるよ。</p><button class="btn ghost block" data-act="test">テスト通知を出す</button>'
         : perm === 'checking' ? '<p>確認中…</p>'
@@ -787,6 +791,14 @@ const views = {
           b.querySelector('[data-act=pin-cal]').onclick = () => pinWidget('calendar');
           b.querySelector('[data-act=pin-next]').onclick = () => pinWidget('next');
         }
+        const icsOpen = b.querySelector('[data-act=ics-open]');
+        if (icsOpen) icsOpen.onclick = () => {
+          if (!state.chars.length){ toast('まだ誰も登録されてないよ'); return; }
+          const url = URL.createObjectURL(new Blob([buildIcs()], { type: 'text/calendar' }));
+          const w = window.open(url, '_blank');
+          if (!w) location.href = url;
+          setTimeout(() => URL.revokeObjectURL(url), 120000);
+        };
         const icsBtn = b.querySelector('[data-act=ics]');
         if (icsBtn) icsBtn.onclick = () => {
           if (!state.chars.length){ toast('まだ誰も登録されてないよ'); return; }
