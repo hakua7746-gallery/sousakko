@@ -1,0 +1,1013 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F7F4FB">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="創作っ子暦">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<title>創作っ子暦</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F7F4FB; --surface:#FFFFFF; --ink:#2A2438; --muted:#857D97; --line:#E6E0EF;
+  --mine:#E4557F; --mine-soft:#FCE6EE; --other:#3E8FC4; --other-soft:#E2F0F9;
+  --today:#2A2438; --today-ink:#FFFFFF; --scrim:rgba(30,24,44,.42);
+  --body:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --display:"Dela Gothic One","Zen Maru Gothic","Hiragino Sans",system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#17141F; --surface:#221E2D; --ink:#EEEAF6; --muted:#9C95AF; --line:#353045;
+    --mine:#F27CA1; --mine-soft:rgba(242,124,161,.16); --other:#6DB4E4; --other-soft:rgba(109,180,228,.16);
+    --today:#EEEAF6; --today-ink:#17141F; --scrim:rgba(0,0,0,.55); color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#17141F; --surface:#221E2D; --ink:#EEEAF6; --muted:#9C95AF; --line:#353045;
+  --mine:#F27CA1; --mine-soft:rgba(242,124,161,.16); --other:#6DB4E4; --other-soft:rgba(109,180,228,.16);
+  --today:#EEEAF6; --today-ink:#17141F; --scrim:rgba(0,0,0,.55); color-scheme:dark;
+}
+
+/* テーマ色（ラベンダーは基本の色） */
+:root[data-palette="peppermint"]{--bg:#F1F8F5;--ink:#1F3530;--muted:#5F7A70;--line:#D6E9E0;--today:#1F3530;--today-ink:#FFFFFF}
+:root[data-palette="chamomile"]{--bg:#FBF8EB;--ink:#3A3424;--muted:#7D7559;--line:#ECE4C6;--today:#3A3424;--today-ink:#FFFFFF}
+:root[data-palette="mallow"]{--bg:#F1F3FC;--ink:#232A45;--muted:#6B7496;--line:#DCE1F2;--today:#232A45;--today-ink:#FFFFFF}
+@media (prefers-color-scheme:dark){
+  :root[data-palette="peppermint"]:not([data-theme="light"]){--bg:#111916;--surface:#1A2521;--ink:#E4F1EB;--muted:#8DA79C;--line:#2B3A34;--today:#E4F1EB;--today-ink:#111916}
+  :root[data-palette="chamomile"]:not([data-theme="light"]){--bg:#1A1812;--surface:#25221A;--ink:#F4F0E1;--muted:#ADA586;--line:#3A3628;--today:#F4F0E1;--today-ink:#1A1812}
+  :root[data-palette="mallow"]:not([data-theme="light"]){--bg:#13151F;--surface:#1D202E;--ink:#E8EBF7;--muted:#959CB8;--line:#30354A;--today:#E8EBF7;--today-ink:#13151F}
+}
+:root[data-theme="dark"][data-palette="peppermint"]{--bg:#111916;--surface:#1A2521;--ink:#E4F1EB;--muted:#8DA79C;--line:#2B3A34;--today:#E4F1EB;--today-ink:#111916}
+:root[data-theme="dark"][data-palette="chamomile"]{--bg:#1A1812;--surface:#25221A;--ink:#F4F0E1;--muted:#ADA586;--line:#3A3628;--today:#F4F0E1;--today-ink:#1A1812}
+:root[data-theme="dark"][data-palette="mallow"]{--bg:#13151F;--surface:#1D202E;--ink:#E8EBF7;--muted:#959CB8;--line:#30354A;--today:#E8EBF7;--today-ink:#13151F}
+.themes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.theme-opt{display:flex;align-items:center;gap:10px;height:46px;padding:0 12px;border-radius:12px;border:1.5px solid var(--line);font-size:14px;text-align:left}
+.theme-opt[aria-pressed="true"]{border-color:var(--ink);font-weight:700}
+.theme-opt .sw{width:24px;height:24px;border-radius:50%;border:1.5px solid rgba(0,0,0,.12);flex:0 0 auto}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--other);outline-offset:2px}
+img{max-width:100%;display:block}
+[hidden]{display:none!important}
+
+.app{max-width:560px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) calc(96px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left))}
+
+/* header: the month numeral is the one loud thing */
+.top{display:flex;align-items:center;gap:4px;padding:4px 0 8px}
+.month-title{display:flex;align-items:baseline;gap:2px;min-width:0}
+.month-title .m{font-family:var(--display);font-size:56px;line-height:1;letter-spacing:-.02em}
+.month-title .mm{font-family:var(--display);font-size:22px;margin-right:8px}
+.month-title .y{color:var(--muted);font-size:14px}
+.top-right{margin-left:auto;display:flex;align-items:center;gap:4px}
+.icon-btn{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:24px;line-height:1;color:var(--ink)}
+.icon-btn:hover{background:var(--line)}
+.icon-btn svg{width:22px;height:22px}
+.text-btn{height:34px;padding:0 14px;border-radius:17px;border:1.5px solid var(--line);font-size:14px}
+.text-btn:hover{border-color:var(--muted)}
+
+/* upcoming strip */
+.soon{margin:4px 0 14px}
+.soon h3{margin:0 0 6px;font-size:13px;font-weight:700;color:var(--muted)}
+.soon-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.soon-row::-webkit-scrollbar{display:none}
+.soon-item{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border-radius:999px;background:var(--surface);border:1.5px solid var(--line);text-align:left;max-width:240px}
+.soon-item.is-today{border-color:var(--mine)}
+.soon-item.other.is-today{border-color:var(--other)}
+.soon-item .who{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+.soon-item .who b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.soon-item .who small{font-size:12px;color:var(--muted)}
+.soon-item.is-today .who small{color:var(--ink);font-weight:700}
+.empty-note{background:var(--surface);border:1.5px dashed var(--line);border-radius:14px;padding:14px;color:var(--muted);font-size:14px;margin:0}
+
+/* legend / filter */
+.legend{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:16px;font-size:13px;border:1.5px solid var(--line);background:var(--surface);color:var(--muted)}
+.chip i{width:12px;height:12px;border-radius:50%;border:2.5px solid currentColor;display:block}
+.chip.mine.on{color:var(--mine);border-color:var(--mine);background:var(--mine-soft)}
+.chip.other.on{color:var(--other);border-color:var(--other);background:var(--other-soft)}
+.chip.on i{background:currentColor}
+
+/* calendar */
+.dow,.grid{display:grid;grid-template-columns:repeat(7,1fr)}
+.dow span{text-align:center;font-size:12px;color:var(--muted);padding:4px 0}
+.dow span:first-child,.dow span:last-child{font-weight:700}
+.grid{background:var(--line);gap:1px;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.cell{background:var(--surface);min-height:70px;padding:4px 3px 5px;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center}
+.cell.empty{background:var(--bg)}
+.cell .d{font-size:13px;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;line-height:1}
+.cell.today .d{background:var(--today);color:var(--today-ink);font-weight:700}
+.cell:not(.empty){cursor:pointer}
+.cell:not(.empty):hover{background:var(--bg)}
+.cell .icons{display:flex;align-items:center;justify-content:center;flex-wrap:wrap}
+.cell .icons .av+.av{margin-left:-7px}
+.more{font-size:11px;color:var(--muted);margin-left:2px}
+
+/* avatar: ring colour = whose character */
+.av{--ring:var(--mine);position:relative;display:inline-grid;place-items:center;border-radius:50%;overflow:hidden;flex:0 0 auto;background:var(--ring);color:#fff;box-shadow:0 0 0 2px var(--ring),0 0 0 3.5px var(--surface)}
+.av.other{--ring:var(--other)}
+.av img{width:100%;height:100%;object-fit:cover;object-position:50% 20%}
+.av b{font-weight:700;line-height:1}
+.av.sm{width:22px;height:22px;font-size:11px;margin:3px 0}
+.av.md{width:36px;height:36px;font-size:15px}
+.av.lg{width:48px;height:48px;font-size:19px}
+
+.status{font-size:12px;color:var(--muted);text-align:center;margin:12px 0 0}
+
+.fab{position:fixed;z-index:5;right:max(18px,calc(50% - 262px));bottom:calc(22px + env(safe-area-inset-bottom));width:58px;height:58px;border-radius:50%;background:var(--ink);color:var(--bg);font-size:30px;line-height:1;display:grid;place-items:center;box-shadow:0 6px 18px rgba(20,14,34,.28)}
+
+/* bottom sheet */
+.scrim{position:fixed;inset:0;background:var(--scrim);z-index:10}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:11;max-width:560px;margin:0 auto;max-height:calc(92vh - env(safe-area-inset-top));max-height:calc(92dvh - env(safe-area-inset-top));display:flex;flex-direction:column;background:var(--surface);border-radius:20px 20px 0 0;box-shadow:0 -8px 30px rgba(20,14,34,.2);animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(24px);opacity:.4}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none}}
+.sheet-head{display:flex;align-items:center;gap:4px;padding:8px 8px 4px;border-bottom:1px solid var(--line)}
+.sheet-head h2{flex:1;margin:0;font-size:17px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sheet-body{overflow-y:auto;padding:16px 18px calc(28px + env(safe-area-inset-bottom))}
+
+.list{list-style:none;margin:0 0 16px;padding:0;display:flex;flex-direction:column;gap:8px}
+.row{width:100%;display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:var(--bg);text-align:left}
+.row .who{display:flex;flex-direction:column;line-height:1.35;min-width:0}
+.row .who b{font-size:16px}
+.row .who small{color:var(--muted);font-size:12px}
+.row .go{margin-left:auto;color:var(--muted);font-size:20px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:44px;padding:0 20px;border-radius:22px;font-weight:700;font-size:15px}
+.btn.primary{background:var(--ink);color:var(--bg)}
+.btn.ghost{border:1.5px solid var(--line)}
+.btn.danger{color:var(--mine);border:1.5px solid var(--line)}
+.btn.danger.armed{background:var(--mine);color:#fff;border-color:var(--mine)}
+.btn.block{width:100%}
+.btn-row{display:flex;gap:8px;margin-top:18px}
+.btn-row .btn{flex:1}
+
+/* detail */
+.portrait{width:min(100%,300px);aspect-ratio:3/4;margin:0 auto 14px;border-radius:16px;overflow:hidden;background:var(--bg);display:grid;place-items:center;border:3px solid var(--mine)}
+.portrait.other{border-color:var(--other)}
+.portrait img{width:100%;height:100%;object-fit:cover}
+.portrait .ph{font-family:var(--display);font-size:72px;color:var(--mine)}
+.portrait.other .ph{color:var(--other)}
+.name{font-size:24px;font-weight:700;text-align:center;margin:0;line-height:1.3}
+.badges{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin:8px 0 16px}
+.badge{font-size:12px;padding:3px 10px;border-radius:999px;background:var(--bg);color:var(--muted)}
+.badge.mine{background:var(--mine-soft);color:var(--mine);font-weight:700}
+.badge.other{background:var(--other-soft);color:var(--other);font-weight:700}
+.block-t{font-size:13px;font-weight:700;color:var(--muted);margin:16px 0 4px}
+.prose{white-space:pre-wrap;word-break:break-word;margin:0}
+.prose.none{color:var(--muted)}
+.memo{background:var(--bg);border-radius:12px;padding:10px 12px}
+.gifts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 4px}
+.gift{border:1.5px solid var(--line);border-radius:12px;padding:8px 12px;min-width:0}
+.gift small{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)}
+.gift small i{font-style:normal;font-size:13px}
+.gift b{display:block;font-size:14px;line-height:1.45;margin-top:2px;word-break:break-word}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+/* form */
+.field{margin-bottom:16px}
+.field > label,.field > .lbl{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
+.field .hint{font-size:12px;color:var(--muted);margin:4px 0 0}
+input[type=text],textarea,select{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px}
+textarea{min-height:92px;resize:vertical}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.seg button{height:42px;border-radius:12px;border:1.5px solid var(--line);font-size:14px;color:var(--muted)}
+.seg button[aria-pressed="true"].mine{border-color:var(--mine);background:var(--mine-soft);color:var(--mine);font-weight:700}
+.seg button[aria-pressed="true"].other{border-color:var(--other);background:var(--other-soft);color:var(--other);font-weight:700}
+.date-row{display:flex;gap:8px;align-items:center}
+.date-row select{width:auto;flex:1}
+.pick{display:flex;gap:14px;align-items:flex-start}
+.pick .frame{width:120px;aspect-ratio:3/4;border-radius:12px;border:1.5px dashed var(--line);background:var(--bg);overflow:hidden;display:grid;place-items:center;color:var(--muted);font-size:12px;text-align:center;flex:0 0 auto}
+.pick .frame canvas,.pick .frame img{width:100%;height:100%;object-fit:cover;display:block}
+.pick .side{display:flex;flex-direction:column;gap:8px;flex:1;min-width:0}
+.pick input[type=range]{width:100%}
+.req{color:var(--mine)}
+.file-host{position:relative;overflow:hidden}
+.file-hit{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:200px;z-index:2}
+.frame-view{width:100%;height:100%;display:grid;place-items:center}
+.checks{display:flex;flex-wrap:wrap;gap:8px}
+.checks label{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 12px;border-radius:18px;border:1.5px solid var(--line);font-size:14px;cursor:pointer}
+.checks input{accent-color:var(--ink)}
+.set-sec{padding:14px 0;border-bottom:1px solid var(--line)}
+.set-sec:last-child{border-bottom:0}
+.set-sec h4{margin:0 0 4px;font-size:15px}
+.set-sec p{margin:0 0 10px;font-size:13px;color:var(--muted)}
+.copy-area{min-height:220px;font-size:12px;font-family:ui-monospace,Menlo,monospace}
+
+.toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;z-index:20;opacity:0;pointer-events:none;transition:opacity .2s;max-width:calc(100% - 32px);text-align:center}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <button class="icon-btn" id="prev" aria-label="前の月">‹</button>
+    <div class="month-title" aria-live="polite"><span class="m" id="mNum"></span><span class="mm">月</span><span class="y" id="yNum"></span></div>
+    <button class="icon-btn" id="next" aria-label="次の月">›</button>
+    <div class="top-right">
+      <button class="text-btn" id="todayBtn">今日</button>
+      <button class="icon-btn" id="settingsBtn" aria-label="設定">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <section class="soon" id="soon"></section>
+
+  <div class="legend" role="group" aria-label="表示するキャラ">
+    <button class="chip mine on" data-f="mine" aria-pressed="true"><i></i>自分のキャラ</button>
+    <button class="chip other on" data-f="other" aria-pressed="true"><i></i>フォロワーさんのキャラ</button>
+  </div>
+
+  <div class="dow" aria-hidden="true"><span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span></div>
+  <div class="grid" id="grid"></div>
+  <p class="status" id="status">この端末のブラウザに保存中</p>
+</div>
+
+<button class="fab" id="addBtn" aria-label="キャラを登録">＋</button>
+
+<div class="scrim" id="scrim" hidden></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" hidden>
+  <div class="sheet-head">
+    <button class="icon-btn" id="sheetBack" aria-label="戻る">‹</button>
+    <h2 id="sheetTitle"></h2>
+    <button class="icon-btn" id="sheetClose" aria-label="閉じる">×</button>
+  </div>
+  <div class="sheet-body" id="sheetBody"></div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+const $ = s => document.querySelector(s);
+const LS_KEY = 'sousakko.web.v1';
+const THEMES = [
+  { id: 'lavender', name: 'ラベンダー', sw: '#E6DDF3' },
+  { id: 'peppermint', name: 'ペパーミント', sw: '#CFEADF' },
+  { id: 'chamomile', name: 'カモミール', sw: '#F4EAC0' },
+  { id: 'mallow', name: 'マロウブルー', sw: '#D3DAF5' },
+];
+function applyTheme(){
+  const id = THEMES.some(t => t.id === state.settings.theme) ? state.settings.theme : 'lavender';
+  document.documentElement.dataset.palette = id;
+  const tc = document.querySelector('meta[name=theme-color]');
+  if (tc) tc.content = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#F7F4FB';
+}
+function themeSection(){
+  const cur = state.settings.theme || 'lavender';
+  return `<div class="set-sec"><h4>テーマ色</h4><div class="themes">${THEMES.map(t =>
+    `<button class="theme-opt" data-theme-id="${t.id}" aria-pressed="${cur === t.id}"><span class="sw" style="background:${t.sw}"></span>${t.name}</button>`).join('')}</div></div>`;
+}
+const REMIND_OPTS = [[0,'当日'],[1,'前日'],[3,'3日前'],[7,'1週間前']];
+// 月の誕生花（国際的によく使われる一覧）と、日本の誕生石（2021年改訂版）
+const FLOWERS = ['カーネーション・スノードロップ','スミレ・サクラソウ','スイセン','デイジー・スイートピー','スズラン・サンザシ','バラ・スイカズラ','ヒエンソウ・スイレン','グラジオラス・ケシ','アスター・アサガオ','マリーゴールド・コスモス','キク','スイセン・ヒイラギ'];
+const STONES = ['ガーネット','アメシスト・クリソベリルキャッツアイ','アクアマリン・珊瑚・ブラッドストーン・アイオライト','ダイヤモンド・モルガナイト','エメラルド・翡翠','真珠・ムーンストーン・アレキサンドライト','ルビー・スフェーン','ペリドット・サードオニキス・スピネル','サファイア・クンツァイト','オパール・トルマリン','トパーズ・シトリン','ターコイズ・ラピスラズリ・タンザナイト・ジルコン'];
+
+/* ---------- native plugins ---------- */
+const CX = null; // このWeb版はスマホアプリの仕組みを使わない
+const isNative = false;
+const Notif = isNative ? CX.registerPlugin('LocalNotifications') : null;
+const FS = isNative ? CX.registerPlugin('Filesystem') : null;
+const Share = isNative ? CX.registerPlugin('Share') : null;
+const AppP = isNative ? CX.registerPlugin('App') : null;
+const Widget = isNative ? CX.registerPlugin('WidgetBridge') : null;
+
+const state = {
+  chars: [],
+  settings: { remind: [0, 1], hour: 9, theme: 'lavender' },
+  filter: { mine: true, other: true },
+  view: (() => { const d = new Date(); d.setDate(1); return d; })(),
+};
+const imgUrls = new Map(); // char id -> object URL
+
+/* ---------- utils ---------- */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const firstChar = s => Array.from((s || '').trim())[0] || '?';
+const newId = () => 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const isLeap = y => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+const daysIn = (y, m) => new Date(y, m, 0).getDate();
+const today0 = () => { const d = new Date(); d.setHours(0,0,0,0); return d; };
+const dayIn = (c, y) => (c.month === 2 && c.day === 29 && !isLeap(y)) ? 28 : c.day;
+const imgSrc = c => imgUrls.get(c.id) || '';
+const ownerLabel = c => c.owner === 'other' ? (c.creator ? `${c.creator}さんのキャラ` : 'フォロワーさんのキャラ') : '自分のキャラ';
+
+let toastTimer;
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+function visible(){ return state.chars.filter(c => state.filter[c.owner === 'other' ? 'other' : 'mine']); }
+function byName(a, b){ return (a.name || '').localeCompare(b.name || '', 'ja'); }
+function charsOn(y, m, d){ return visible().filter(c => c.month === m && dayIn(c, y) === d).sort(byName); }
+function nextOcc(c){
+  const t = today0(); let y = t.getFullYear();
+  let dt = new Date(y, c.month - 1, dayIn(c, y));
+  if (dt < t){ y++; dt = new Date(y, c.month - 1, dayIn(c, y)); }
+  return dt;
+}
+const daysUntil = dt => Math.round((dt - today0()) / 86400000);
+const untilLabel = n => n === 0 ? '今日！' : n === 1 ? '明日' : `あと${n}日`;
+
+function avatar(c, size){
+  const src = imgSrc(c);
+  const own = c.owner === 'other' ? 'other' : 'mine';
+  return `<span class="av ${own} ${size}" aria-hidden="true">${src ? `<img src="${esc(src)}" alt="">` : `<b>${esc(firstChar(c.name))}</b>`}</span>`;
+}
+
+/* ---------- image store (IndexedDB) ---------- */
+let idbP = null;
+function idb(){
+  if (!idbP) idbP = new Promise((res, rej) => {
+    const r = indexedDB.open('oshical-images', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('img');
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+  return idbP;
+}
+async function idbTx(mode, fn){
+  const db = await idb();
+  return new Promise((res, rej) => {
+    const tx = db.transaction('img', mode);
+    const out = fn(tx.objectStore('img'));
+    tx.oncomplete = () => res(out && 'result' in out ? out.result : undefined);
+    tx.onerror = () => rej(tx.error);
+  });
+}
+const imgPut = (id, blob) => idbTx('readwrite', s => s.put(blob, id));
+const imgGet = id => idbTx('readonly', s => s.get(id));
+const imgDel = id => idbTx('readwrite', s => s.delete(id));
+function setUrl(id, blob){
+  const old = imgUrls.get(id); if (old) URL.revokeObjectURL(old);
+  if (blob) imgUrls.set(id, URL.createObjectURL(blob)); else imgUrls.delete(id);
+}
+async function loadAllImages(){
+  for (const c of state.chars){
+    if (!c.hasImg) continue;
+    try { const b = await imgGet(c.id); if (b) setUrl(c.id, b); } catch (e) {}
+  }
+}
+const blobToDataUrl = b => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(b); });
+const dataUrlToBlob = async u => (await fetch(u)).blob();
+
+/* ---------- data ---------- */
+function load(){
+  try {
+    const o = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+    if (o){
+      state.chars = Array.isArray(o.chars) ? o.chars : [];
+      if (o.settings) state.settings = { remind: o.settings.remind || [0, 1], hour: o.settings.hour ?? 9, theme: o.settings.theme || 'lavender' };
+    }
+  } catch (e) {}
+}
+function save(){
+  try { localStorage.setItem(LS_KEY, JSON.stringify({ chars: state.chars, settings: state.settings })); }
+  catch (e) { toast('保存できなかった。端末の空き容量を確認してみて'); }
+  scheduleSoon();
+  pushWidget();
+}
+const THUMB_KEY = 'oshical.widgetThumbs';
+let widgetBusy = null, widgetAgain = false;
+async function sendThumbs(){
+  let sent = {};
+  try { sent = JSON.parse(localStorage.getItem(THUMB_KEY) || '{}'); } catch (e) {}
+  const next = {};
+  for (const c of state.chars){
+    if (!c.hasImg) continue;
+    const stamp = String(c.updatedAt || c.createdAt || 0);
+    if (sent[c.id] === stamp){ next[c.id] = stamp; continue; }
+    try {
+      const blob = await imgGet(c.id);
+      if (!blob) continue;
+      const bmp = await createImageBitmap(blob);
+      const cv = document.createElement('canvas'); cv.width = 160; cv.height = 160;
+      const side = Math.min(bmp.width, bmp.height);
+      const sy = (bmp.height - side) * 0.2; // 顔が入りやすいよう少し上寄りに切り抜く
+      cv.getContext('2d').drawImage(bmp, (bmp.width - side) / 2, sy, side, side, 0, 0, 160, 160);
+      const b64 = cv.toDataURL('image/jpeg', 0.85).split(',')[1];
+      await Widget.saveThumb({ id: c.id, data: b64 });
+      next[c.id] = stamp;
+    } catch (e) {}
+  }
+  try { localStorage.setItem(THUMB_KEY, JSON.stringify(next)); } catch (e) {}
+}
+function pushWidget(){
+  if (!Widget) return;
+  if (widgetBusy){ widgetAgain = true; return; }
+  widgetBusy = (async () => {
+    do {
+      widgetAgain = false;
+      await sendThumbs();
+      const data = {
+        theme: state.settings.theme || 'lavender',
+        chars: state.chars.map(c => ({ id: c.id, name: c.name, month: c.month, day: c.day, owner: c.owner === 'other' ? 'other' : 'mine', img: !!c.hasImg })),
+      };
+      try { await Widget.update({ data: JSON.stringify(data) }); } catch (e) {}
+    } while (widgetAgain);
+  })().finally(() => { widgetBusy = null; });
+}
+function putChar(c){
+  c.updatedAt = Date.now();
+  const i = state.chars.findIndex(x => x.id === c.id);
+  if (i >= 0) state.chars[i] = c; else state.chars.push(c);
+  save(); renderAll();
+}
+async function removeChar(id){
+  state.chars = state.chars.filter(x => x.id !== id);
+  save();
+  try { await imgDel(id); } catch (e) {}
+  setUrl(id, null);
+  renderAll();
+}
+
+/* ---------- notifications ---------- */
+let schedTimer;
+function scheduleSoon(){ clearTimeout(schedTimer); schedTimer = setTimeout(rescheduleAll, 600); }
+function shifted(c, n){
+  const base = new Date(2001, c.month - 1, (c.month === 2 && c.day === 29) ? 28 : c.day);
+  base.setDate(base.getDate() - n);
+  return { month: base.getMonth() + 1, day: base.getDate() };
+}
+async function notifPermission(){
+  if (!Notif) return 'unavailable';
+  try { return (await Notif.checkPermissions()).display; } catch (e) { return 'unavailable'; }
+}
+async function rescheduleAll(){
+  if (!Notif) return;
+  if ((await notifPermission()) !== 'granted') return;
+  try {
+    const pending = await Notif.getPending();
+    if (pending.notifications && pending.notifications.length){
+      await Notif.cancel({ notifications: pending.notifications.map(n => ({ id: n.id })) });
+    }
+    const list = []; let id = 1;
+    const remind = state.settings.remind;
+    for (const c of state.chars){
+      for (const n of remind){
+        const d = shifted(c, n);
+        list.push({
+          id: id++,
+          title: n === 0 ? `🎂 今日は${c.name}の誕生日！` : `🎂 ${n === 1 ? '明日' : n + '日後'}は${c.name}の誕生日`,
+          body: `${c.month}月${c.day}日・${ownerLabel(c)}`,
+          // Android版プラグインは month を 0始まりで扱う
+          schedule: { on: { month: d.month - 1, day: d.day, hour: state.settings.hour, minute: 0 }, allowWhileIdle: true },
+          isExactNotification: false,
+          extra: { charId: c.id },
+        });
+      }
+    }
+    const MAX = 450;
+    if (list.length > MAX) toast(`通知の数が多すぎるから、最初の${MAX}件だけ予約したよ`);
+    if (list.length) await Notif.schedule({ notifications: list.slice(0, MAX) });
+  } catch (e) {
+    console.error(e);
+    toast('通知の予約に失敗した');
+  }
+}
+async function ensurePermission(){
+  if (!Notif) return false;
+  let p = await notifPermission();
+  if (p === 'granted') return true;
+  try { p = (await Notif.requestPermissions()).display; } catch (e) {}
+  if (p === 'granted'){ rescheduleAll(); return true; }
+  return false;
+}
+
+/* ---------- main render ---------- */
+function renderAll(){
+  renderGrid(); renderSoon();
+  const top = stack[stack.length - 1];
+  if (!top) return;
+  if (top.type === 'detail' && !state.chars.find(c => c.id === top.id)){ back(); return; }
+  if (top.type === 'day' || top.type === 'detail') showTop();
+}
+
+function renderGrid(){
+  const y = state.view.getFullYear(), m = state.view.getMonth() + 1;
+  $('#mNum').textContent = m; $('#yNum').textContent = y;
+  const lead = new Date(y, m - 1, 1).getDay();
+  const n = daysIn(y, m);
+  const t = today0();
+  let html = '';
+  for (let i = 0; i < lead; i++) html += '<div class="cell empty"></div>';
+  for (let d = 1; d <= n; d++){
+    const list = charsOn(y, m, d);
+    const isToday = t.getFullYear() === y && t.getMonth() + 1 === m && t.getDate() === d;
+    const icons = list.slice(0, 2).map(c => avatar(c, 'sm')).join('') + (list.length > 2 ? `<span class="more">+${list.length - 2}</span>` : '');
+    const label = `${m}月${d}日${list.length ? `、誕生日${list.length}人` : ''}`;
+    html += `<button class="cell${isToday ? ' today' : ''}${list.length ? ' has' : ''}" data-d="${d}" aria-label="${label}">
+      <span class="d">${d}</span>${list.length ? `<span class="icons">${icons}</span>` : ''}</button>`;
+  }
+  const tail = (7 - ((lead + n) % 7)) % 7;
+  for (let i = 0; i < tail; i++) html += '<div class="cell empty"></div>';
+  $('#grid').innerHTML = html;
+}
+
+function renderSoon(){
+  const box = $('#soon');
+  if (!state.chars.length){
+    box.innerHTML = '<p class="empty-note">まだ誰も登録されてないよ。右下の＋からキャラの誕生日を登録してね。バックアップがあるときは、設定から読み込めるよ。</p>';
+    return;
+  }
+  const horizon = Math.max(0, ...state.settings.remind);
+  const all = visible().map(c => ({ c, n: daysUntil(nextOcc(c)), dt: nextOcc(c) })).sort((a, b) => a.n - b.n || byName(a.c, b.c));
+  let items = all.filter(x => x.n <= horizon);
+  let title = horizon === 0 ? '今日が誕生日' : `もうすぐ誕生日（${horizon}日以内）`;
+  if (!items.length && all.length){ items = all.filter(x => x.n === all[0].n); title = '次の誕生日'; }
+  if (!items.length){ box.innerHTML = ''; return; }
+  box.innerHTML = `<h3>${title}</h3><div class="soon-row">${items.map(({ c, n, dt }) =>
+    `<button class="soon-item ${c.owner === 'other' ? 'other' : 'mine'}${n === 0 ? ' is-today' : ''}" data-id="${esc(c.id)}">
+      ${avatar(c, 'md')}<span class="who"><b>${esc(c.name)}</b><small>${dt.getMonth() + 1}/${dt.getDate()}・${untilLabel(n)}</small></span>
+    </button>`).join('')}</div>`;
+}
+
+/* ---------- sheet navigation ---------- */
+const stack = [];
+function openView(v){ stack.push(v); showTop(); }
+function back(){ stack.pop(); stack.length ? showTop() : closeSheet(); }
+function closeSheet(){ stack.length = 0; $('#sheet').hidden = true; $('#scrim').hidden = true; }
+function showTop(){
+  const v = stack[stack.length - 1];
+  const r = views[v.type](v);
+  if (!r){ back(); return; }
+  $('#sheet').hidden = false; $('#scrim').hidden = false;
+  $('#sheetBack').style.visibility = stack.length > 1 ? 'visible' : 'hidden';
+  $('#sheetTitle').textContent = r.title;
+  const body = $('#sheetBody');
+  body.innerHTML = r.html;
+  if (r.bind) r.bind(body);
+}
+
+const views = {
+  day(v){
+    const list = charsOn(v.y, v.m, v.d);
+    return {
+      title: `${v.m}月${v.d}日`,
+      html: (list.length
+        ? `<ul class="list">${list.map(c => `<li><button class="row" data-id="${esc(c.id)}">${avatar(c, 'lg')}
+            <span class="who"><b>${esc(c.name)}</b><small>${esc(ownerLabel(c))}</small></span><span class="go">›</span></button></li>`).join('')}</ul>`
+        : '<p class="empty-note" style="margin-bottom:16px">この日に誕生日のキャラはいないよ。</p>')
+        + `<button class="btn ghost block" data-act="add">この日で新しく登録</button>`,
+      bind(b){
+        b.querySelectorAll('.row').forEach(el => el.onclick = () => openView({ type: 'detail', id: el.dataset.id }));
+        b.querySelector('[data-act=add]').onclick = () => openView({ type: 'edit', month: v.m, day: v.d });
+      }
+    };
+  },
+
+  detail(v){
+    const c = state.chars.find(x => x.id === v.id);
+    if (!c) return null;
+    const own = c.owner === 'other' ? 'other' : 'mine';
+    const src = imgSrc(c);
+    const n = daysUntil(nextOcc(c));
+    const feb29 = c.month === 2 && c.day === 29 ? '<span class="badge">平年は2/28に表示</span>' : '';
+    return {
+      title: c.name,
+      html: `<div class="portrait ${own}">${src ? `<img src="${esc(src)}" alt="${esc(c.name)}の画像">` : `<span class="ph">${esc(firstChar(c.name))}</span>`}</div>
+        <p class="name">${esc(c.name)}</p>
+        <div class="badges"><span class="badge ${own}">${esc(ownerLabel(c))}</span><span class="badge">${c.month}月${c.day}日生まれ</span><span class="badge">${untilLabel(n)}</span>${feb29}</div>
+        <div class="gifts">
+          <div class="gift"><small><i aria-hidden="true">✿</i>誕生花</small><b>${esc(c.flower || FLOWERS[c.month - 1])}</b></div>
+          <div class="gift"><small><i aria-hidden="true">◆</i>誕生石</small><b>${esc(c.stone || STONES[c.month - 1])}</b></div>
+        </div>
+        <p class="block-t">プロフィール</p>
+        <p class="prose${c.profile ? '' : ' none'}">${c.profile ? esc(c.profile) : 'まだ書いてないよ'}</p>
+        <p class="block-t">自分用メモ</p>
+        <div class="memo"><p class="prose${c.memo ? '' : ' none'}">${c.memo ? esc(c.memo) : 'お祝いのアイデアや、見返したいことをメモしておけるよ'}</p></div>
+        <div class="btn-row"><button class="btn danger" data-act="del">削除</button><button class="btn primary" data-act="edit">編集</button></div>`,
+      bind(b){
+        b.querySelector('[data-act=edit]').onclick = () => openView({ type: 'edit', id: c.id });
+        const del = b.querySelector('[data-act=del]');
+        del.onclick = async () => {
+          if (!del.classList.contains('armed')){ del.classList.add('armed'); del.textContent = 'もう一度押すと削除'; return; }
+          del.disabled = true;
+          await removeChar(c.id);
+          toast(`${c.name}を削除したよ`);
+        };
+      }
+    };
+  },
+
+  edit(v){
+    const orig = v.id ? state.chars.find(x => x.id === v.id) : null;
+    const t = today0();
+    const d = orig ? { ...orig } : { name: '', owner: 'mine', creator: '', month: v.month || t.getMonth() + 1, day: v.day || t.getDate(), profile: '', memo: '' };
+    const monthOpts = Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}"${d.month === i + 1 ? ' selected' : ''}>${i + 1}月</option>`).join('');
+    const src = orig ? imgSrc(orig) : '';
+    return {
+      title: orig ? '編集' : 'キャラを登録',
+      html: `
+      <div class="field"><span class="lbl">画像（3:4に切り抜くよ）</span>
+        <div class="pick">
+          <label class="frame file-host"><span class="frame-view">${src ? `<img src="${esc(src)}" alt="">` : 'タップして<br>画像を選ぶ'}</span><input type="file" accept="image/*" class="file-hit" data-role="file" aria-label="画像を選ぶ"></label>
+          <div class="side">
+            <label class="btn ghost file-host">画像を選ぶ<input type="file" accept="image/*" class="file-hit" data-role="file" tabindex="-1" aria-hidden="true"></label>
+            <div data-role="pos" hidden><label style="font-size:12px;color:var(--muted)" for="posRange">切り抜く位置</label><input type="range" id="posRange" min="0" max="100" value="20"></div>
+            <button class="btn ghost" data-act="clear"${src ? '' : ' hidden'}>画像を外す</button>
+          </div>
+        </div>
+      </div>
+      <div class="field"><label for="fName">名前 <span class="req">*</span></label><input type="text" id="fName" maxlength="60" value="${esc(d.name)}" autocomplete="off"></div>
+      <div class="field"><span class="lbl">どっちのキャラ？</span>
+        <div class="seg"><button class="mine" data-owner="mine" aria-pressed="${d.owner !== 'other'}">自分のキャラ</button><button class="other" data-owner="other" aria-pressed="${d.owner === 'other'}">フォロワーさんのキャラ</button></div>
+      </div>
+      <div class="field" data-role="creator"${d.owner === 'other' ? '' : ' hidden'}><label for="fCreator">この子の親御さん（フォロワーさんの名前やID）</label><input type="text" id="fCreator" maxlength="60" value="${esc(d.creator)}" autocomplete="off"></div>
+      <div class="field"><span class="lbl">誕生日</span>
+        <div class="date-row"><select id="fMonth" aria-label="月">${monthOpts}</select><select id="fDay" aria-label="日"></select></div>
+      </div>
+      <div class="field"><div class="two">
+        <div><label for="fFlower" style="display:block;font-size:13px;font-weight:700;margin-bottom:6px">誕生花</label><input type="text" id="fFlower" maxlength="80" value="${esc(d.flower)}" autocomplete="off"></div>
+        <div><label for="fStone" style="display:block;font-size:13px;font-weight:700;margin-bottom:6px">誕生石</label><input type="text" id="fStone" maxlength="80" value="${esc(d.stone)}" autocomplete="off"></div>
+      </div><p class="hint">空欄なら、誕生月の定番を表示するよ。日ごとの誕生花など、好きなものに書き換えてもOK</p></div>
+      <div class="field"><label for="fProfile">プロフィール</label><textarea id="fProfile" maxlength="3000">${esc(d.profile)}</textarea></div>
+      <div class="field"><label for="fMemo">自分用メモ</label><textarea id="fMemo" maxlength="3000" placeholder="お祝い絵のネタ、贈りたいもの、覚えておきたいことなど">${esc(d.memo)}</textarea></div>
+      <button class="btn primary block" data-act="save">${orig ? '保存' : '登録'}</button>`,
+      bind(b){
+        let owner = d.owner === 'other' ? 'other' : 'mine';
+        let srcImg = null;
+        let removeImg = false;
+        const frame = b.querySelector('.frame-view');
+        const fileIns = b.querySelectorAll('[data-role=file]');
+        const posWrap = b.querySelector('[data-role=pos]');
+        const range = b.querySelector('#posRange');
+        const clearBtn = b.querySelector('[data-act=clear]');
+        const fMonth = b.querySelector('#fMonth'), fDay = b.querySelector('#fDay');
+        const fFlower = b.querySelector('#fFlower'), fStone = b.querySelector('#fStone');
+
+        const fillDays = keep => {
+          const m = +fMonth.value; const max = m === 2 ? 29 : daysIn(2001, m);
+          const cur = Math.min(keep, max);
+          fDay.innerHTML = Array.from({ length: max }, (_, i) => `<option value="${i + 1}"${cur === i + 1 ? ' selected' : ''}>${i + 1}日</option>`).join('');
+        };
+        const setPh = () => { const i = +fMonth.value - 1; fFlower.placeholder = FLOWERS[i]; fStone.placeholder = STONES[i]; };
+        fillDays(d.day); setPh();
+        fMonth.onchange = () => { fillDays(+fDay.value); setPh(); };
+
+        b.querySelectorAll('[data-owner]').forEach(btn => btn.onclick = () => {
+          owner = btn.dataset.owner;
+          b.querySelectorAll('[data-owner]').forEach(x => x.setAttribute('aria-pressed', String(x === btn)));
+          b.querySelector('[data-role=creator]').hidden = owner !== 'other';
+        });
+
+        const drawPreview = () => {
+          const cv = cropTo(srcImg, 240, 320, +range.value / 100);
+          frame.innerHTML = ''; frame.appendChild(cv);
+        };
+        const onFile = async fileIn => {
+          const f = fileIn.files && fileIn.files[0]; if (!f) return;
+          try {
+            srcImg = await loadImage(f); removeImg = false;
+            const ratio = srcImg.naturalWidth / srcImg.naturalHeight;
+            posWrap.hidden = Math.abs(ratio - 0.75) < 0.01;
+            range.value = ratio < 0.75 ? 20 : 50;
+            drawPreview(); clearBtn.hidden = false;
+          } catch (e) { toast('この画像は読み込めなかった'); }
+          fileIn.value = '';
+        };
+        fileIns.forEach(inp => inp.onchange = () => onFile(inp));
+        range.oninput = () => srcImg && drawPreview();
+        clearBtn.onclick = () => {
+          srcImg = null; removeImg = true; posWrap.hidden = true; clearBtn.hidden = true;
+          frame.innerHTML = 'タップして<br>画像を選ぶ';
+        };
+
+        const saveBtn = b.querySelector('[data-act=save]');
+        saveBtn.onclick = async () => {
+          const name = b.querySelector('#fName').value.trim();
+          if (!name){ toast('名前を入れてね'); b.querySelector('#fName').focus(); return; }
+          saveBtn.disabled = true; saveBtn.textContent = '保存中…';
+          const c = orig ? { ...orig } : { id: newId(), createdAt: Date.now() };
+          Object.assign(c, {
+            name, owner,
+            creator: owner === 'other' ? b.querySelector('#fCreator').value.trim() : '',
+            month: +fMonth.value, day: +fDay.value,
+            flower: fFlower.value.trim(), stone: fStone.value.trim(),
+            profile: b.querySelector('#fProfile').value.trim(),
+            memo: b.querySelector('#fMemo').value.trim(),
+          });
+          try {
+            if (srcImg){
+              const blob = await canvasBlob(cropTo(srcImg, 600, 800, +range.value / 100), 0.86);
+              await imgPut(c.id, blob); setUrl(c.id, blob); c.hasImg = true;
+            } else if (removeImg){
+              await imgDel(c.id); setUrl(c.id, null); c.hasImg = false;
+            }
+            putChar(c);
+            toast(orig ? '保存したよ' : `${name}を登録したよ`);
+            stack.pop();
+            if (!orig){
+              if (!stack.length){ state.view = new Date(nextOcc(c).getFullYear(), c.month - 1, 1); renderGrid(); }
+              stack.push({ type: 'detail', id: c.id });
+              ensurePermission();
+            }
+            showTop();
+          } catch (e) {
+            toast('保存できなかった。もう一度試してみて');
+            saveBtn.disabled = false; saveBtn.textContent = orig ? '保存' : '登録';
+          }
+        };
+      }
+    };
+  },
+
+  settings(v){
+    const r = state.settings.remind;
+    const perm = v.perm || 'checking';
+    const permHtml = !isNative
+      ? `<p>このページは閉じていると通知を出せないから、全員の誕生日をカレンダー用のファイルにまとめて書き出せるよ。スマホのカレンダーに読み込むと、下で選んだタイミングと時間に毎年通知が届く。いつもの予定と混ざらないように、先にカレンダーアプリで「創作っ子暦」みたいな新しいカレンダーを作って、そこに追加するのがおすすめ。キャラを増やしたら書き出し直してね。</p>
+        <button class="btn primary block" data-act="ics">カレンダー用ファイルを書き出す</button>`
+      : perm === 'granted'
+        ? '<p>通知はオンになってるよ。</p><button class="btn ghost block" data-act="test">テスト通知を出す</button>'
+        : perm === 'checking' ? '<p>確認中…</p>'
+        : '<p>通知がオフになってるよ。オンにすると、アプリを閉じていても誕生日を知らせてくれる。</p><button class="btn primary block" data-act="perm">通知をオンにする</button>';
+    const hourOpts = Array.from({ length: 24 }, (_, h) => `<option value="${h}"${state.settings.hour === h ? ' selected' : ''}>${h}時</option>`).join('');
+    return {
+      title: '設定',
+      html: `
+      ${themeSection()}
+      <div class="set-sec"><h4>通知</h4>${permHtml}</div>
+      <div class="set-sec"><h4>リマインドのタイミング</h4>
+        <p>${isNative ? '選んだタイミングで通知が届いて、' : 'カレンダー用ファイルの通知に使われて、'}カレンダーの上にも「もうすぐ誕生日」として表示されるよ。</p>
+        <div class="checks">${REMIND_OPTS.map(([val, l]) => `<label><input type="checkbox" value="${val}"${r.includes(val) ? ' checked' : ''}>${l}</label>`).join('')}</div>
+        <div class="field" style="margin:12px 0 0"><label for="fHour">通知する時間</label><select id="fHour" style="width:auto">${hourOpts}</select></div>
+        ${isNative ? '<p style="margin:10px 0 0">通知が遅れたり届かなかったりするときは、スマホの設定で創作っ子暦の「電池の最適化」を「制限なし」にしてみてね。</p>' : ''}
+      </div>
+      ${Widget ? `<div class="set-sec"><h4>ウィジェット</h4>
+        <p>ホーム画面に置けるよ。色はテーマ色に合わせて変わる。ホーム画面を長押しして「ウィジェット」から探して追加することもできるよ。</p>
+        <div class="btn-row" style="margin-top:0"><button class="btn ghost" data-act="pin-cal">カレンダー</button><button class="btn ghost" data-act="pin-next">次の誕生日</button></div>
+      </div>` : ''}
+      <div class="set-sec"><h4>バックアップ・引っ越し</h4>
+        <p>${isNative ? '画像も含めてファイルに書き出して、Googleドライブなどに保存できるよ。Web版で書き出したファイルもここから読み込める。' : 'データはこの端末のブラウザの中だけに保存されてるよ。ブラウザのデータを消すと一緒に消えちゃうから、ときどき書き出して保存しておいてね。画像も一緒に書き出せて、機種変更のときもこのファイルで引っ越せるよ。'}</p>
+        <div class="btn-row" style="margin-top:0"><button class="btn ghost" data-act="export">書き出す</button><label class="btn ghost file-host">読み込む<input type="file" accept="application/json,.json,text/plain" class="file-hit" data-role="import"></label></div>
+      </div>
+      <div class="set-sec"><h4>登録数</h4>
+        <p style="margin:0">自分のキャラ ${state.chars.filter(c => c.owner !== 'other').length}人・フォロワーさんのキャラ ${state.chars.filter(c => c.owner === 'other').length}人</p>
+      </div>`,
+      bind(b){
+        if (isNative && perm === 'checking'){
+          notifPermission().then(p => { const top = stack[stack.length - 1]; if (top === v){ v.perm = p; showTop(); } });
+        }
+        const permBtn = b.querySelector('[data-act=perm]');
+        if (permBtn) permBtn.onclick = async () => {
+          const ok = await ensurePermission();
+          if (!ok) toast('スマホの設定アプリから、創作っ子暦の通知を許可してね');
+          v.perm = await notifPermission(); showTop();
+        };
+        const testBtn = b.querySelector('[data-act=test]');
+        if (testBtn) testBtn.onclick = async () => {
+          try {
+            await Notif.schedule({ notifications: [{ id: 99999, title: '🎂 テスト通知', body: '創作っ子暦の通知はこんなふうに届くよ' }] });
+          } catch (e) { toast('テスト通知を出せなかった'); }
+        };
+        b.querySelectorAll('.checks input').forEach(inp => inp.onchange = () => {
+          state.settings.remind = [...b.querySelectorAll('.checks input:checked')].map(x => +x.value).sort((a, c) => a - c);
+          save(); renderSoon();
+        });
+        b.querySelectorAll('[data-theme-id]').forEach(btn => btn.onclick = () => {
+          state.settings.theme = btn.dataset.themeId; applyTheme(); save(); showTop();
+        });
+        const pinWidget = async kind => {
+          if (!Widget){ toast('スマホのアプリ版で使えるよ'); return; }
+          try {
+            const r = await Widget.pin({ kind });
+            if (!r.supported) toast('ホーム画面を長押しして「ウィジェット」から追加してね');
+          } catch (e) { toast('ホーム画面を長押しして「ウィジェット」から追加してね'); }
+        };
+        if (Widget){
+          b.querySelector('[data-act=pin-cal]').onclick = () => pinWidget('calendar');
+          b.querySelector('[data-act=pin-next]').onclick = () => pinWidget('next');
+        }
+        const icsBtn = b.querySelector('[data-act=ics]');
+        if (icsBtn) icsBtn.onclick = () => {
+          if (!state.chars.length){ toast('まだ誰も登録されてないよ'); return; }
+          offerFile('sousakko.ics', buildIcs(), 'text/calendar');
+        };
+        b.querySelector('#fHour').onchange = e => { state.settings.hour = +e.target.value; save(); };
+        b.querySelector('[data-act=export]').onclick = exportBackup;
+        b.querySelector('[data-role=import]').onchange = importBackup;
+      }
+    };
+  },
+};
+
+/* ---------- images ---------- */
+function loadImage(file){
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file);
+    const im = new Image();
+    im.onload = () => res(im);
+    im.onerror = () => { URL.revokeObjectURL(url); rej(new Error('load')); };
+    im.src = url;
+  });
+}
+function cropTo(im, w, h, pos){
+  const iw = im.naturalWidth, ih = im.naturalHeight, target = w / h;
+  let sx = 0, sy = 0, sw = iw, sh = ih;
+  if (iw / ih > target){ sw = ih * target; sx = (iw - sw) * pos; }
+  else { sh = iw / target; sy = (ih - sh) * pos; }
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(im, sx, sy, sw, sh, 0, 0, w, h);
+  return cv;
+}
+const canvasBlob = (cv, q) => new Promise((res, rej) => cv.toBlob(b => b ? res(b) : rej(new Error('blob')), 'image/jpeg', q));
+
+/* ---------- backup ---------- */
+function backupName(){
+  const d = new Date();
+  return `sousakko-backup-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}.json`;
+}
+const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+async function offerFile(filename, text, mime){
+  const file = new File([text], filename, { type: mime });
+  if (isIOS && navigator.canShare && navigator.canShare({ files: [file] })){
+    try { await navigator.share({ files: [file] }); return; }
+    catch (e) { if (e && e.name === 'AbortError') return; }
+  }
+  const url = URL.createObjectURL(file);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.rel = 'noopener';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  toast('書き出したよ');
+}
+
+/* ---------- calendar file (.ics) ---------- */
+function icsText(v){ return String(v || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n'); }
+function fold(line){
+  const enc = new TextEncoder(); const out = []; let cur = ''; let bytes = 0;
+  for (const ch of line){
+    const b = enc.encode(ch).length;
+    if (bytes + b > (out.length ? 74 : 75)){ out.push(cur); cur = ''; bytes = 0; }
+    cur += ch; bytes += b;
+  }
+  out.push(cur);
+  return out.join('\r\n ');
+}
+const ymd = d => `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+function trigger(n, hour){
+  const mins = hour * 60 - n * 1440;
+  if (mins >= 0) return `PT${Math.floor(mins / 60)}H`;
+  const m = -mins, d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60);
+  return `-P${d ? d + 'D' : ''}T${h}H`;
+}
+function buildIcs(){
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+  const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//sousakko//JA', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'X-WR-CALNAME:創作っ子暦'];
+  const remind = state.settings.remind.length ? state.settings.remind : [0];
+  const hour = state.settings.hour ?? 9;
+  for (const c of state.chars){
+    const leap = c.month === 2 && c.day === 29;
+    const start = leap
+      ? (() => { let y = new Date().getFullYear(); while (!isLeap(y)) y--; return new Date(y, 1, 29); })()
+      : new Date(new Date().getFullYear() - 1, c.month - 1, c.day);
+    const end = new Date(start); end.setDate(end.getDate() + 1);
+    L.push('BEGIN:VEVENT', `UID:${c.id}@sousakko`, `DTSTAMP:${stamp}`,
+      `DTSTART;VALUE=DATE:${ymd(start)}`, `DTEND;VALUE=DATE:${ymd(end)}`,
+      leap ? 'RRULE:FREQ=YEARLY;BYMONTH=2;BYMONTHDAY=-1' : 'RRULE:FREQ=YEARLY',
+      `SUMMARY:${icsText('🎂 ' + c.name + 'の誕生日')}`,
+      `DESCRIPTION:${icsText(ownerLabel(c) + (c.memo ? '\n\nメモ: ' + c.memo : ''))}`,
+      'TRANSP:TRANSPARENT');
+    for (const n of remind){
+      L.push('BEGIN:VALARM', 'ACTION:DISPLAY',
+        `DESCRIPTION:${icsText(n === 0 ? '今日は' + c.name + 'の誕生日！' : (n === 1 ? '明日' : n + '日後') + 'は' + c.name + 'の誕生日')}`,
+        `TRIGGER:${trigger(n, hour)}`, 'END:VALARM');
+    }
+    L.push('END:VEVENT');
+  }
+  L.push('END:VCALENDAR');
+  return L.map(fold).join('\r\n') + '\r\n';
+}
+
+async function exportBackup(){
+  if (!state.chars.length){ toast('まだ誰も登録されてないよ'); return; }
+  toast('書き出し中…');
+  const chars = [];
+  for (const c of state.chars){
+    const out = { ...c }; delete out.hasImg;
+    if (c.hasImg){ try { const b = await imgGet(c.id); if (b) out.imgData = await blobToDataUrl(b); } catch (e) {} }
+    chars.push(out);
+  }
+  const text = JSON.stringify({ app: 'oshi-calendar', version: 1, exportedAt: new Date().toISOString(), settings: state.settings, chars });
+  if (!FS || !Share){ await offerFile(backupName(), text, 'application/json'); return; }
+  const d = new Date();
+  const name = `oshi-calendar-backup-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}.json`;
+  try {
+    const w = await FS.writeFile({ path: name, data: text, directory: 'CACHE', encoding: 'utf8' });
+    await Share.share({ title: '創作っ子暦のバックアップ', files: [w.uri], dialogTitle: '保存先を選んでね' });
+  } catch (e) {
+    if (!/cancel/i.test(String(e && e.message))) toast('書き出せなかった');
+  }
+}
+async function importBackup(e){
+  const f = e.target.files && e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  try {
+    const data = JSON.parse(await f.text());
+    const list = Array.isArray(data.chars) ? data.chars : [];
+    let count = 0;
+    for (const raw of list){
+      const m = +raw.month, d = +raw.day;
+      if (!raw.name || !(m >= 1 && m <= 12) || !(d >= 1 && d <= 31)) continue;
+      const id = typeof raw.id === 'string' && /^[\w.-]{1,80}$/.test(raw.id) ? raw.id : newId();
+      const c = { id, month: m, day: d, owner: raw.owner === 'other' ? 'other' : 'mine' };
+      for (const k of ['name','creator','flower','stone','profile','memo']) if (typeof raw[k] === 'string') c[k] = raw[k];
+      c.createdAt = +raw.createdAt || Date.now();
+      const old = state.chars.find(x => x.id === id);
+      c.hasImg = old ? !!old.hasImg : false;
+      if (typeof raw.imgData === 'string' && raw.imgData.startsWith('data:image/')){
+        try { const blob = await dataUrlToBlob(raw.imgData); await imgPut(id, blob); setUrl(id, blob); c.hasImg = true; } catch (err) {}
+      }
+      const i = state.chars.findIndex(x => x.id === id);
+      c.updatedAt = Date.now();
+      if (i >= 0) state.chars[i] = c; else state.chars.push(c);
+      count++;
+    }
+    if (data.settings && Array.isArray(data.settings.remind)){
+      state.settings.remind = data.settings.remind.filter(n => [0,1,3,7].includes(n));
+      if (Number.isInteger(data.settings.hour)) state.settings.hour = data.settings.hour;
+      if (THEMES.some(t => t.id === data.settings.theme)){ state.settings.theme = data.settings.theme; applyTheme(); }
+    }
+    save();
+    toast(count ? `${count}人を読み込んだよ` : '読み込めるキャラが見つからなかった');
+    if (count) ensurePermission();
+    renderAll();
+    if (stack.length) showTop();
+  } catch (err) { toast('このファイルは読み込めなかった。創作っ子暦のバックアップか確認してね'); }
+}
+
+/* ---------- events ---------- */
+$('#prev').onclick = () => { state.view.setMonth(state.view.getMonth() - 1); renderGrid(); };
+$('#next').onclick = () => { state.view.setMonth(state.view.getMonth() + 1); renderGrid(); };
+$('#todayBtn').onclick = () => { state.view = new Date(); state.view.setDate(1); renderGrid(); };
+$('#settingsBtn').onclick = () => { stack.length = 0; openView({ type: 'settings' }); };
+$('#addBtn').onclick = () => { stack.length = 0; openView({ type: 'edit' }); };
+$('#grid').onclick = e => {
+  const cell = e.target.closest('.cell[data-d]'); if (!cell) return;
+  stack.length = 0;
+  const y = state.view.getFullYear(), m = state.view.getMonth() + 1, d = +cell.dataset.d;
+  if (cell.classList.contains('has')) openView({ type: 'day', y, m, d });
+  else openView({ type: 'edit', month: m, day: d });
+};
+$('#soon').onclick = e => {
+  const it = e.target.closest('.soon-item'); if (!it) return;
+  stack.length = 0; openView({ type: 'detail', id: it.dataset.id });
+};
+document.querySelectorAll('.chip').forEach(ch => ch.onclick = () => {
+  const k = ch.dataset.f; state.filter[k] = !state.filter[k];
+  if (!state.filter.mine && !state.filter.other){ state.filter[k === 'mine' ? 'other' : 'mine'] = true; }
+  document.querySelectorAll('.chip').forEach(x => { const on = state.filter[x.dataset.f]; x.classList.toggle('on', on); x.setAttribute('aria-pressed', String(on)); });
+  renderGrid(); renderSoon();
+});
+$('#sheetBack').onclick = back;
+$('#sheetClose').onclick = closeSheet;
+$('#scrim').onclick = closeSheet;
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && stack.length) closeSheet(); });
+
+let sx = null;
+$('#grid').addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, { passive: true });
+$('#grid').addEventListener('touchend', e => {
+  if (sx === null) return; const dx = e.changedTouches[0].clientX - sx; sx = null;
+  if (Math.abs(dx) > 60){ (dx < 0 ? $('#next') : $('#prev')).click(); }
+});
+
+if (AppP){
+  // Androidの戻るボタン：シートが開いていれば閉じる／戻る
+  AppP.addListener('backButton', () => { if (stack.length) back(); else AppP.exitApp(); });
+  // アプリに戻ってきたら「今日」を更新
+  AppP.addListener('resume', () => { renderAll(); pushWidget(); });
+}
+if (Notif){
+  Notif.addListener('localNotificationActionPerformed', ev => {
+    const id = ev && ev.notification && ev.notification.extra && ev.notification.extra.charId;
+    if (id && state.chars.find(c => c.id === id)){ stack.length = 0; openView({ type: 'detail', id }); }
+  });
+}
+
+/* ---------- start ---------- */
+if (navigator.storage && navigator.storage.persist){ navigator.storage.persist().catch(() => {}); }
+if ('serviceWorker' in navigator && location.protocol === 'https:'){
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+load();
+applyTheme();
+renderAll();
+pushWidget();
+loadAllImages().then(renderAll);
+rescheduleAll();
+})();
+</script>
+</body>
+</html>
