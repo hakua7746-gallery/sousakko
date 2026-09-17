@@ -723,13 +723,20 @@ const views = {
   settings(v){
     const r = state.settings.remind;
     const perm = v.perm || 'checking';
+    const icsHelp = `<p>このページは閉じていると通知を出せないから、全員の誕生日をカレンダー用のファイルにまとめられるよ。カレンダーに追加すると、下で選んだタイミングと時間に毎年通知が届く。先にカレンダーアプリで「創作っ子暦」という新しいカレンダーを作っておくと、いつもの予定と混ざらないよ。キャラを増やしたら、また追加し直してね。</p>`;
+    const icsHtml = !isIOS
+      ? `${icsHelp}<button class="btn primary block" data-act="ics">カレンダー用ファイルを書き出す</button>`
+      : isStandalone()
+        ? `${icsHelp}
+           <p style="margin:0 0 10px">ホーム画面のアイコンから開いているときは、下のボタンでファイルを書き出して、メールで自分宛てに送ってね。メールの添付ファイルをタップ →「カレンダーに追加」→ 追加先を選んで右上のチェックで追加できるよ。Safariでこのページを開けば、ワンタップで追加することもできる。</p>
+           <button class="btn primary block" data-act="ics">カレンダー用ファイルを書き出す</button>`
+        : `${icsHelp}
+           <p style="margin:0 0 10px">下のボタン →「許可」→ 画面のいちばん下の「カレンダーに追加」→ 追加先のカレンダーを選んで、右上のチェックで追加できるよ。</p>
+           <button class="btn primary block" data-act="ics-open">カレンダーで開く</button>
+           <p style="margin:10px 0 0">うまく開かないときは、ファイルを書き出してメールで自分宛てに送っても追加できるよ。</p>
+           <button class="btn ghost block" data-act="ics" style="margin-top:8px">ファイルとして書き出す</button>`;
     const permHtml = !isNative
-      ? `<p>このページは閉じていると通知を出せないから、全員の誕生日をカレンダー用のファイルにまとめて書き出せるよ。スマホのカレンダーに読み込むと、下で選んだタイミングと時間に毎年通知が届く。いつもの予定と混ざらないように、先にカレンダーアプリで「創作っ子暦」みたいな新しいカレンダーを作って、そこに追加するのがおすすめ。キャラを増やしたら書き出し直してね。</p>
-        ${isIOS
-          ? `<button class="btn primary block" data-act="ics-open">カレンダーで開く</button>
-             <p style="margin:10px 0 0">うまく開かないときは、下のボタンでファイルを書き出して、メールで自分宛てに送ってね。メールアプリで添付ファイルをタップすると、カレンダーに追加できるよ。</p>
-             <button class="btn ghost block" data-act="ics" style="margin-top:8px">ファイルとして書き出す</button>`
-          : `<button class="btn primary block" data-act="ics">カレンダー用ファイルを書き出す</button>`}`
+      ? icsHtml
       : perm === 'granted'
         ? '<p>通知はオンになってるよ。</p><button class="btn ghost block" data-act="test">テスト通知を出す</button>'
         : perm === 'checking' ? '<p>確認中…</p>'
@@ -842,6 +849,7 @@ function backupName(){
   return `sousakko-backup-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}.json`;
 }
 const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isStandalone = () => navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
 async function offerFile(filename, text, mime){
   const file = new File([text], filename, { type: mime });
   if (isIOS && navigator.canShare && navigator.canShare({ files: [file] })){
