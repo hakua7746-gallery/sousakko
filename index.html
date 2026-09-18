@@ -201,6 +201,18 @@ textarea{min-height:92px;resize:vertical}
 .set-sec:last-child{border-bottom:0}
 .set-sec h4{margin:0 0 4px;font-size:15px}
 .set-sec p{margin:0 0 10px;font-size:13px;color:var(--muted)}
+.credit p{margin:0 0 6px;font-size:12px;line-height:1.7}
+.credit a{color:var(--other);text-decoration:underline}
+.cropper{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;background:#0E0B14;color:#fff}
+.crop-title{margin:0;padding:calc(14px + env(safe-area-inset-top)) 16px 8px;text-align:center;font-weight:700;font-size:15px}
+.crop-stage{flex:1;position:relative;overflow:hidden;display:grid;place-items:center;touch-action:none;cursor:grab}
+.crop-img{position:absolute;left:0;top:0;transform-origin:0 0;max-width:none;user-select:none;-webkit-user-drag:none;pointer-events:none}
+.crop-frame{position:relative;width:min(80vw,calc((100vh - 230px) * .75),420px);aspect-ratio:3/4;border-radius:10px;box-shadow:0 0 0 2px rgba(255,255,255,.92),0 0 0 9999px rgba(14,11,20,.64);pointer-events:none}
+.crop-bar{display:flex;flex-direction:column;gap:12px;padding:12px 18px calc(16px + env(safe-area-inset-bottom));max-width:560px;width:100%;margin:0 auto;box-sizing:border-box}
+.crop-hint{margin:0;font-size:13px;color:rgba(255,255,255,.72);text-align:center}
+.crop-zoom{width:100%;accent-color:#fff}
+.cropper .btn.ghost{border-color:rgba(255,255,255,.35)}
+.cropper .btn.primary{background:#fff;color:#1A1522}
 .copy-area{min-height:220px;font-size:12px;font-family:ui-monospace,Menlo,monospace}
 
 .toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;z-index:20;opacity:0;pointer-events:none;transition:opacity .2s;max-width:calc(100% - 32px);text-align:center}
@@ -612,7 +624,7 @@ const views = {
           <label class="frame file-host"><span class="frame-view">${src ? `<img src="${esc(src)}" alt="">` : 'タップして<br>画像を選ぶ'}</span><input type="file" accept="image/*" class="file-hit" data-role="file" aria-label="画像を選ぶ"></label>
           <div class="side">
             <label class="btn ghost file-host">画像を選ぶ<input type="file" accept="image/*" class="file-hit" data-role="file" tabindex="-1" aria-hidden="true"></label>
-            <div data-role="pos" hidden><label style="font-size:12px;color:var(--muted)" for="posRange">切り抜く位置</label><input type="range" id="posRange" min="0" max="100" value="20"></div>
+            <button class="btn ghost" data-act="adjust"${src ? '' : ' hidden'}>位置を調整</button>
             <button class="btn ghost" data-act="clear"${src ? '' : ' hidden'}>画像を外す</button>
           </div>
         </div>
@@ -634,12 +646,11 @@ const views = {
       <button class="btn primary block" data-act="save">${orig ? '保存' : '登録'}</button>`,
       bind(b){
         let owner = d.owner === 'other' ? 'other' : 'mine';
-        let srcImg = null;
+        let srcImg = null, rect = null;
         let removeImg = false;
         const frame = b.querySelector('.frame-view');
         const fileIns = b.querySelectorAll('[data-role=file]');
-        const posWrap = b.querySelector('[data-role=pos]');
-        const range = b.querySelector('#posRange');
+        const adjustBtn = b.querySelector('[data-act=adjust]');
         const clearBtn = b.querySelector('[data-act=clear]');
         const fMonth = b.querySelector('#fMonth'), fDay = b.querySelector('#fDay');
         const fFlower = b.querySelector('#fFlower'), fStone = b.querySelector('#fStone');
@@ -660,24 +671,33 @@ const views = {
         });
 
         const drawPreview = () => {
-          const cv = cropTo(srcImg, 240, 320, +range.value / 100);
+          const cv = cropRect(srcImg, rect, 240, 320);
           frame.innerHTML = ''; frame.appendChild(cv);
         };
+        // 調整画面で「決定」したときだけ反映する（キャンセルなら元のまま）
+        const adjust = async (im, startRect) => {
+          const r = await openCropper(im, startRect);
+          if (!r) return;
+          srcImg = im; rect = r; removeImg = false;
+          drawPreview(); clearBtn.hidden = false; adjustBtn.hidden = false;
+        };
         const onFile = async fileIn => {
-          const f = fileIn.files && fileIn.files[0]; if (!f) return;
-          try {
-            srcImg = await loadImage(f); removeImg = false;
-            const ratio = srcImg.naturalWidth / srcImg.naturalHeight;
-            posWrap.hidden = Math.abs(ratio - 0.75) < 0.01;
-            range.value = ratio < 0.75 ? 20 : 50;
-            drawPreview(); clearBtn.hidden = false;
-          } catch (e) { toast('この画像は読み込めなかった'); }
-          fileIn.value = '';
+          const f = fileIn.files && fileIn.files[0]; fileIn.value = ''; if (!f) return;
+          let im;
+          try { im = await loadImage(f); } catch (e) { toast('この画像は読み込めなかった'); return; }
+          const ratio = im.naturalWidth / im.naturalHeight;
+          await adjust(im, defaultRect(im, 3 / 4, ratio < 0.75 ? 0.2 : 0.5));
         };
         fileIns.forEach(inp => inp.onchange = () => onFile(inp));
-        range.oninput = () => srcImg && drawPreview();
+        adjustBtn.onclick = async () => {
+          if (srcImg){ await adjust(srcImg, rect); return; }
+          const u = orig && imgSrc(orig); if (!u) return;
+          let im;
+          try { im = await loadImageUrl(u); } catch (e) { toast('この画像は読み込めなかった'); return; }
+          await adjust(im, defaultRect(im, 3 / 4, 0.5));
+        };
         clearBtn.onclick = () => {
-          srcImg = null; removeImg = true; posWrap.hidden = true; clearBtn.hidden = true;
+          srcImg = null; rect = null; removeImg = true; clearBtn.hidden = true; adjustBtn.hidden = true;
           frame.innerHTML = 'タップして<br>画像を選ぶ';
         };
 
@@ -697,7 +717,7 @@ const views = {
           });
           try {
             if (srcImg){
-              const blob = await canvasBlob(cropTo(srcImg, 600, 800, +range.value / 100), 0.86);
+              const blob = await canvasBlob(cropRect(srcImg, rect, 600, 800), 0.86);
               await imgPut(c.id, blob); setUrl(c.id, blob); c.hasImg = true;
             } else if (removeImg){
               await imgDel(c.id); setUrl(c.id, null); c.hasImg = false;
@@ -763,6 +783,11 @@ const views = {
       </div>
       <div class="set-sec"><h4>登録数</h4>
         <p style="margin:0">自分のキャラ ${state.chars.filter(c => c.owner !== 'other').length}人・フォロワーさんのキャラ ${state.chars.filter(c => c.owner === 'other').length}人</p>
+      </div>
+      <div class="set-sec credit">
+        <p>© 2026 白亜7746（hakua7746）</p>
+        <p>アプリの改変・再配布・無断転載はご遠慮ください。画面のスクリーンショットをSNSなどで紹介していただくのは大歓迎です！スクショに写るキャラ画像の扱いは、それぞれの作者さんのルールに従ってください。</p>
+        <p>お問い合わせ：<a href="https://x.com/hono9rayray"${isNative ? '' : ' target="_blank" rel="noopener"'}>X（@hono9rayray）</a></p>
       </div>`,
       bind(b){
         if (isNative && perm === 'checking'){
@@ -829,17 +854,127 @@ function loadImage(file){
     im.src = url;
   });
 }
-function cropTo(im, w, h, pos){
-  const iw = im.naturalWidth, ih = im.naturalHeight, target = w / h;
-  let sx = 0, sy = 0, sw = iw, sh = ih;
-  if (iw / ih > target){ sw = ih * target; sx = (iw - sw) * pos; }
-  else { sh = iw / target; sy = (ih - sh) * pos; }
+function loadImageUrl(url){
+  return new Promise((res, rej) => {
+    const im = new Image();
+    im.onload = () => res(im);
+    im.onerror = () => rej(new Error('load'));
+    im.src = url;
+  });
+}
+// 比率 ratio(幅/高さ) の枠いっぱいに収まる切り抜き範囲。pos は 0=上(左)寄せ〜1=下(右)寄せ
+function defaultRect(im, ratio, pos){
+  const iw = im.naturalWidth, ih = im.naturalHeight;
+  if (iw / ih > ratio){ const sw = ih * ratio; return { sx: (iw - sw) * pos, sy: 0, sw, sh: ih }; }
+  const sh = iw / ratio; return { sx: 0, sy: (ih - sh) * pos, sw: iw, sh };
+}
+function cropRect(im, r, w, h){
   const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
   const ctx = cv.getContext('2d');
   ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
   ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(im, sx, sy, sw, sh, 0, 0, w, h);
+  ctx.drawImage(im, r.sx, r.sy, r.sw, r.sh, 0, 0, w, h);
   return cv;
+}
+
+/* ---------- 画像の位置調整（ピンチで拡大縮小・ドラッグで移動） ---------- */
+let cropperClose = null;
+function openCropper(im, startRect){
+  return new Promise(resolve => {
+    const iw = im.naturalWidth, ih = im.naturalHeight;
+    const el = document.createElement('div');
+    el.className = 'cropper';
+    el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', '画像の位置を調整');
+    el.innerHTML = `
+      <p class="crop-title">位置を調整</p>
+      <div class="crop-stage"><img class="crop-img" alt=""><div class="crop-frame"></div></div>
+      <div class="crop-bar">
+        <p class="crop-hint">ピンチで拡大・縮小、ドラッグで位置を動かせるよ</p>
+        <input type="range" class="crop-zoom" min="0" max="1000" value="0" aria-label="拡大">
+        <div class="btn-row" style="margin-top:0"><button class="btn ghost" data-act="cancel">キャンセル</button><button class="btn primary" data-act="ok">決定</button></div>
+      </div>`;
+    document.body.appendChild(el);
+    const stage = el.querySelector('.crop-stage'), frameEl = el.querySelector('.crop-frame');
+    const img = el.querySelector('.crop-img'), zoom = el.querySelector('.crop-zoom');
+    img.src = im.src; img.style.width = iw + 'px'; img.style.height = ih + 'px';
+
+    let fw = 1, fh = 1, fx = 0, fy = 0, minS = 1, maxS = 8, s = 1, tx = 0, ty = 0;
+    const clamp = () => {
+      s = Math.min(maxS, Math.max(minS, s));
+      tx = Math.min(0, Math.max(fw - iw * s, tx));
+      ty = Math.min(0, Math.max(fh - ih * s, ty));
+    };
+    const apply = () => {
+      img.style.transform = `translate(${fx + tx}px, ${fy + ty}px) scale(${s})`;
+      zoom.value = String(Math.round(Math.log(s / minS) / Math.log(maxS / minS) * 1000));
+    };
+    const current = () => ({ sx: -tx / s, sy: -ty / s, sw: fw / s, sh: fh / s });
+    const measure = r => {
+      const sr = stage.getBoundingClientRect(), fr = frameEl.getBoundingClientRect();
+      fw = fr.width; fh = fr.height; fx = fr.left - sr.left; fy = fr.top - sr.top;
+      minS = Math.max(fw / iw, fh / ih); maxS = minS * 8;
+      s = fw / r.sw; tx = -r.sx * s; ty = -r.sy * s;
+      clamp(); apply();
+    };
+    // 枠の中の点(px, py)を中心に拡大縮小
+    const zoomAt = (ns, px, py) => {
+      ns = Math.min(maxS, Math.max(minS, ns));
+      tx = px - (px - tx) * ns / s; ty = py - (py - ty) * ns / s; s = ns;
+      clamp(); apply();
+    };
+
+    const pts = new Map();
+    let last = null;
+    const snap = () => {
+      const a = [...pts.values()];
+      if (!a.length) return null;
+      if (a.length === 1) return { x: a[0].x, y: a[0].y, d: 0 };
+      return { x: (a[0].x + a[1].x) / 2, y: (a[0].y + a[1].y) / 2, d: Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) };
+    };
+    stage.addEventListener('pointerdown', e => {
+      try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); last = snap();
+    });
+    stage.addEventListener('pointermove', e => {
+      if (!pts.has(e.pointerId)) return;
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const now = snap();
+      if (last && now){
+        tx += now.x - last.x; ty += now.y - last.y;
+        if (now.d && last.d){
+          const fr = frameEl.getBoundingClientRect();
+          zoomAt(s * now.d / last.d, now.x - fr.left, now.y - fr.top);
+        } else { clamp(); apply(); }
+      }
+      last = now;
+    });
+    const lift = e => { pts.delete(e.pointerId); last = snap(); };
+    stage.addEventListener('pointerup', lift);
+    stage.addEventListener('pointercancel', lift);
+    stage.addEventListener('wheel', e => {
+      e.preventDefault();
+      const fr = frameEl.getBoundingClientRect();
+      zoomAt(s * Math.exp(-e.deltaY * 0.0015), e.clientX - fr.left, e.clientY - fr.top);
+    }, { passive: false });
+    zoom.addEventListener('input', () => {
+      zoomAt(minS * Math.pow(maxS / minS, +zoom.value / 1000), fw / 2, fh / 2);
+    });
+
+    // iPhoneのSafariで画面全体がズームしないように
+    el.addEventListener('gesturestart', e => e.preventDefault());
+    const onResize = () => measure(current());
+    window.addEventListener('resize', onResize);
+    const finish = r => {
+      window.removeEventListener('resize', onResize);
+      el.remove(); cropperClose = null; resolve(r);
+    };
+    cropperClose = () => finish(null);
+    el.querySelector('[data-act=cancel]').onclick = () => finish(null);
+    el.querySelector('[data-act=ok]').onclick = () => finish(current());
+
+    measure(startRect);
+    el.querySelector('[data-act=ok]').focus();
+  });
 }
 const canvasBlob = (cv, q) => new Promise((res, rej) => cv.toBlob(b => b ? res(b) : rej(new Error('blob')), 'image/jpeg', q));
 
@@ -994,7 +1129,11 @@ document.querySelectorAll('.chip').forEach(ch => ch.onclick = () => {
 $('#sheetBack').onclick = back;
 $('#sheetClose').onclick = closeSheet;
 $('#scrim').onclick = closeSheet;
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && stack.length) closeSheet(); });
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (cropperClose){ cropperClose(); return; }
+  if (stack.length) closeSheet();
+});
 
 let sx = null;
 $('#grid').addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, { passive: true });
@@ -1005,7 +1144,7 @@ $('#grid').addEventListener('touchend', e => {
 
 if (AppP){
   // Androidの戻るボタン：シートが開いていれば閉じる／戻る
-  AppP.addListener('backButton', () => { if (stack.length) back(); else AppP.exitApp(); });
+  AppP.addListener('backButton', () => { if (cropperClose) cropperClose(); else if (stack.length) back(); else AppP.exitApp(); });
   // アプリに戻ってきたら「今日」を更新
   AppP.addListener('resume', () => { renderAll(); pushWidget(); });
 }
